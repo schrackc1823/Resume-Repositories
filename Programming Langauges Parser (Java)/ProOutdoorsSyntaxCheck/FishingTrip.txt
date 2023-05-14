@@ -1,0 +1,16 @@
+create
+person
+Curtis
+.
+adventure
+setup
+tent
+fire
+insectSpray
+days
+14
+activity
+fishing
+activity
+starGazing
+.
