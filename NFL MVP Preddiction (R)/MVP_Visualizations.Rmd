@@ -1,0 +1,240 @@
+---
+title: "MVP_Visualizations"
+author: "Mason Seftas and Curtis Schrack"
+date: "4/4/2022"
+output: powerpoint_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library_packages,include=FALSE}
+library(ggplot2)
+library(ggpubr)
+library(tidyverse)
+library(readr)
+library(GGally)
+library(caTools)
+library(glmnet)
+library(boot)
+library(flextable)
+library(magrittr)
+```
+
+```{r read_info, include=FALSE}
+mvpStats = read_csv(file = "Award_Stats.csv")
+```
+
+```{r fix_data,include=FALSE}
+mvpStats = mvpStats %>%
+  mutate(position = as.factor(position),
+         player = as.factor(player),
+         team = as.factor(team),
+         OPOY = as.factor(OPOY),
+         DPOY = as.factor(DPOY),
+         )
+mvpStats = mvpStats[,-c(1)]
+```
+
+## Summary of dataset (first 10)
+
+```{r show_summary, echo = FALSE}
+flextable(mvpStats[10:20,])
+```
+
+
+```{r split_data, include=FALSE}
+set.seed(123)
+split = sample.split(mvpStats$votes, SplitRatio = 0.75 )
+train = subset(mvpStats, split == TRUE)
+test = subset(mvpStats, split == FALSE)
+```
+
+```{r visualize_categorical, include = FALSE}
+pos = ggplot(train)+
+  geom_histogram(aes(x = votes, fill = position), binwidth = 10)
+OP = ggplot(train)+
+  geom_boxplot(aes(y = votes, color = OPOY))
+DP = ggplot(train)+
+  geom_boxplot(aes(y = votes, color = DPOY))
+```
+
+```{r show_plots, echo = FALSE}
+pos
+```
+
+```{r boxplots, echo =FALSE}
+ggarrange(OP, DP, ncol = 2, nrow = 1)
+```
+
+
+```{r visualize_numerical, include=FALSE}
+expe = ggplot(mvpStats)+
+  geom_point(aes(x = Experience, y = votes))
+game = ggplot(mvpStats)+
+  geom_point(aes(x = games, y = votes))
+star = ggplot(mvpStats)+
+  geom_point(aes(x = starts, y = votes))
+pac = ggplot(mvpStats)+
+  geom_point(aes(x = pass_cmp, y = votes))
+pay = ggplot(mvpStats)+
+  geom_point(aes(x = pass_yds, y = votes))
+patd = ggplot(mvpStats)+
+  geom_point(aes(x = pass_td, y = votes))
+pai = ggplot(mvpStats)+
+  geom_point(aes(x = pass_int, y = votes))
+ra = ggplot(mvpStats)+
+  geom_point(aes(x = rush_att, y = votes))
+ry = ggplot(mvpStats)+
+  geom_point(aes(x = rush_yds, y = votes))
+rtd = ggplot(mvpStats)+
+  geom_point(aes(x = rush_td, y = votes))
+rec = ggplot(mvpStats)+
+  geom_point(aes(x = rec, y = votes))
+rey = ggplot(mvpStats)+
+  geom_point(aes(x = rec_yds, y = votes))
+retd = ggplot(mvpStats)+
+  geom_point(aes(x = rec_td, y = votes))
+dt = ggplot(mvpStats)+
+  geom_point(aes(x = def_tackles, y = votes))
+ds = ggplot(mvpStats)+
+  geom_point(aes(x = def_sacks, y = votes))
+di = ggplot(mvpStats)+
+  geom_point(aes(x = def_int, y = votes))
+dtd = ggplot(mvpStats)+
+  geom_point(aes(x = def_td, y = votes))
+ttd = ggplot(mvpStats)+
+  geom_point(aes(x = total_td, y = votes))
+```
+
+```{r show_scatters, echo = FALSE}
+ggarrange(expe, game, star, pac, pay, patd, pai, ra, ry, rtd, rec, rey, retd, dt, ds, di, dtd, ttd, ncol = 3, nrow = 3)
+```
+
+```{r correlation_check, echo=FALSE}
+ggcorr(mvpStats)
+```
+
+## K-Fold Cross Validation
+```{r echo=FALSE}
+bestPolyDegree = data.frame(matrix(0, nrow = 18, ncol = 6))
+bestPolyDegree[,1] = c('Experience', 'games', 'starts', 'pass_cmp', 'pass_yds', 'pass_td', 'pass_int', 'rush_att', 'rush_yds', 'rush_td', 'rec', 'rec_yds', 'rec_td', 'def_tackles', 'def_sacks', 'def_int', 'def_td', 'total_td')
+colnames(bestPolyDegree) = c('Stat', 'Degree 1', 'Degree 2', 'Degree 3', 'Degree 4', 'Degree 5')
+set.seed(123)
+for (j in 1:5){
+    model.k = glm(votes ~ poly(Experience,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[1,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+    model.k = glm(votes ~ poly(games,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[2,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+    model.k = glm(votes ~ poly(starts,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[3,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+    model.k = glm(votes ~ poly(pass_cmp,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[4,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+    model.k = glm(votes ~ poly(pass_yds,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[5,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+    model.k = glm(votes ~ poly(pass_td,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[6,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+    model.k = glm(votes ~ poly(pass_int,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[7,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+    model.k = glm(votes ~ poly(rush_att,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[8,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+    model.k = glm(votes ~ poly(rush_yds,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[9,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+    model.k = glm(votes ~ poly(rush_td,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[10,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+    model.k = glm(votes ~ poly(rec,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[11,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+    model.k = glm(votes ~ poly(rec_yds,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[12,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+    model.k = glm(votes ~ poly(rec_td,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[13,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+    model.k = glm(votes ~ poly(def_tackles,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[14,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+    model.k = glm(votes ~ poly(def_sacks,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[15,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+    model.k = glm(votes ~ poly(def_int,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[16,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+    model.k = glm(votes ~ poly(def_td,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[17,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+    model.k = glm(votes ~ poly(total_td,degree = j,raw = TRUE), data = train)
+    bestPolyDegree[18,j+1] = cv.glm(train, model.k, K = 10)$delta[1]
+}
+```
+## Cross Validation summary
+```{r}
+flextable(bestPolyDegree)
+```
+
+##Pre Backward eleimination
+```{r backward_selection_all_predictors, include=FALSE}
+model_all = lm(votes ~ position + poly(Experience, 2, raw = TRUE) + OPOY + DPOY + poly(games, 2, raw = TRUE) + poly(starts, 5, raw = TRUE) + pass_cmp + pass_yds + poly(pass_td,3,raw = TRUE) + poly(pass_int,2,raw = TRUE) + poly(rush_att,3,raw = TRUE) + poly(rush_yds,3,raw = TRUE) +  poly(rush_td,2,raw = TRUE) + rec + poly(rec_yds,2,raw = TRUE) + rec_td + poly(def_tackles,5,raw = TRUE) + poly(def_sacks,4,raw = TRUE) + poly(def_int,2,raw = TRUE) + poly(def_td,4,raw = TRUE) + poly(total_td,3,raw = TRUE), data = train)
+summary(model_all)
+```
+
+```{r show_all, echo = FALSE}
+summary(model_all)
+```
+
+```{r model_poly}
+model_poly = lm(votes ~ poly(Experience, 2, raw = TRUE) + pass_cmp + pass_yds + poly(pass_td,2,raw = TRUE) + poly(rush_att,1,raw = TRUE) +poly(rush_yds,1,raw = TRUE) + poly(total_td,3,raw = TRUE), data = train)
+summary(model_poly)
+```
+
+```{r show_poly, echo = FALSE}
+summary(model_poly)
+```
+
+## Regression model 
+```{r load_image_formula,echo=FALSE}
+knitr::include_graphics("Multi_reg_formula.png")
+```
+
+```{r residual_check,include=FALSE}
+residuals = ggplot() + 
+  geom_point(aes(x = model_poly$fitted.values, y = model_poly$residuals)) + 
+  geom_abline(slope = 0, intercept = 0)
+residuals
+```
+
+```{r graph_residuals, echo=FALSE}
+residuals
+```
+
+```{r Test_Error,include=FALSE}
+y_pred = predict(model_poly, test[,-c(5,8)])
+mult_lin_error = sqrt(mean((test$votes - y_pred)^2))
+mult_lin_error
+```
+
+## Test Error
+
+```{r show_mult_lin_error}
+mult_lin_error
+```
+
+# Test Model On 2021 MVP Race
+
+```{r load_2021_stats, include = FALSE}
+mvpStats_2021 = read_csv(file = "Award_Stats_2021.csv")
+```
+
+## Test Error on 2021 MVP Race
+
+```{r test_model, echo=FALSE}
+y_pred_2021 = predict(model_poly, mvpStats_2021[,-c(5,8)])
+mult_lin_error_2021 = sqrt(mean((mvpStats_2021$votes - y_pred_2021)^2))
+mult_lin_error_2021
+```
+
+```{r preds,echo = FALSE}
+Pred_Results2021 = subset(mvpStats_2021[,c(2,5)])
+Pred_Results2021$pred_votes =  y_pred_2021
+```
+
+# Actual 2021 results vs predicted
+
+```{r show_2021_results, echo = FALSE}
+flextable(Pred_Results2021)
+```
+
