@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/ResultsConstraintLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ResultsFragment">
+
+    <TextView
+        android:id="@+id/DetectedPlateTextView"
+        android:layout_width="233dp"
+        android:layout_height="73dp"
+        android:layout_marginBottom="80dp"
+        android:text="@string/DetectedPlateTextView"
+        android:textAlignment="center"
+        android:textAllCaps="true"
+        android:textSize="32sp"
+        app:layout_constraintBottom_toTopOf="@+id/ResultTextView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
+
+
+    <TextView
+        android:id="@+id/ResultTextView"
+        android:layout_width="0dp"
+        android:layout_height="134dp"
+        android:background="@color/fail"
+        android:gravity="center_horizontal|center_vertical"
+        android:textAlignment="inherit"
+        android:textColor="@color/black"
+        android:textSize="32sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.365" />
+
+    <Button
+        android:id="@+id/fillSavePrintButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="140dp"
+        android:background="@drawable/rounded_button"
+        android:text="@string/ResultFillCitation"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ResultTextView"
+        app:layout_constraintVertical_bias="1.0" />
+
+<!--    <Spinner-->
+<!--        android:id="@+id/MultipleStateLicensePlateSpinner"-->
+<!--        style="@style/Widget.AppCompat.Spinner.Underlined"-->
+<!--        android:layout_width="409dp"-->
+<!--        android:layout_height="50dp"-->
+<!--        app:layout_constraintBottom_toTopOf="@+id/fillSavePrintButton"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/ResultTextView"-->
+<!--        android:entries="@array/parkingLots"/>-->
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+
